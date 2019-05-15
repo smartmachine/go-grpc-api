@@ -10,10 +10,16 @@
   version = "v1.4.1"
 
 [[projects]]
-  digest = "1:239c4c7fd2159585454003d9be7207167970194216193a8a210b8d29576f19c9"
+  digest = "1:835c6b6a0c663019e88ea84e84867377b0f259dd6b620232533a680ec3e1dce4"
   name = "github.com/golang/protobuf"
   packages = [
     "proto",
+    "protoc-gen-go",
+    "protoc-gen-go/descriptor",
+    "protoc-gen-go/generator",
+    "protoc-gen-go/generator/internal/remap",
+    "protoc-gen-go/grpc",
+    "protoc-gen-go/plugin",
     "ptypes",
     "ptypes/any",
     "ptypes/duration",
@@ -142,6 +148,7 @@
   input-imports = [
     "github.com/go-sql-driver/mysql",
     "github.com/golang/protobuf/proto",
+    "github.com/golang/protobuf/protoc-gen-go",
     "github.com/golang/protobuf/ptypes",
     "github.com/golang/protobuf/ptypes/timestamp",
     "google.golang.org/grpc",

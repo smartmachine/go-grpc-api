@@ -9,8 +9,6 @@ import (
 	proto "github.com/golang/protobuf/proto"
 	timestamp "github.com/golang/protobuf/ptypes/timestamp"
 	grpc "google.golang.org/grpc"
-	codes "google.golang.org/grpc/codes"
-	status "google.golang.org/grpc/status"
 	math "math"
 )
 
@@ -722,26 +720,6 @@ type ToDoServiceServer interface {
 	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
 	// Read all todo tasks
 	ReadAll(context.Context, *ReadAllRequest) (*ReadAllResponse, error)
-}
-
-// UnimplementedToDoServiceServer can be embedded to have forward compatible implementations.
-type UnimplementedToDoServiceServer struct {
-}
-
-func (*UnimplementedToDoServiceServer) Create(ctx context.Context, req *CreateRequest) (*CreateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Create not implemented")
-}
-func (*UnimplementedToDoServiceServer) Read(ctx context.Context, req *ReadRequest) (*ReadResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Read not implemented")
-}
-func (*UnimplementedToDoServiceServer) Update(ctx context.Context, req *UpdateRequest) (*UpdateResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Update not implemented")
-}
-func (*UnimplementedToDoServiceServer) Delete(ctx context.Context, req *DeleteRequest) (*DeleteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
-}
-func (*UnimplementedToDoServiceServer) ReadAll(ctx context.Context, req *ReadAllRequest) (*ReadAllResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method ReadAll not implemented")
 }
 
 func RegisterToDoServiceServer(s *grpc.Server, srv ToDoServiceServer) {
