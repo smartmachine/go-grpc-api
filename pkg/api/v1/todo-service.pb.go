@@ -23,7 +23,7 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
-// Taks we have to do
+// Tasks we have to do
 type ToDo struct {
 	// Unique integer identifier of the todo task
 	Id int64 `protobuf:"varint,1,opt,name=id,proto3" json:"id,omitempty"`
