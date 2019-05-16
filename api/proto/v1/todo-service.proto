@@ -3,7 +3,7 @@ package v1;
 
 import "google/protobuf/timestamp.proto";
 
-// Taks we have to do
+// Tasks we have to do
 message ToDo {
     // Unique integer identifier of the todo task
     int64 id = 1;
