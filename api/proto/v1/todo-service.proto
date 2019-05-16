@@ -162,11 +162,11 @@ service ToDoService {
     // Update todo task
     rpc Update(UpdateRequest) returns (UpdateResponse){
         option (google.api.http) = {
-            put: "/v1/todo/{toDo.id}"
+            put: "/v1/todo/{id}"
             body: "*"
 
             additional_bindings {
-                patch: "/v1/todo/{toDo.id}"
+                patch: "/v1/todo/{id}"
                 body: "*"
             }
         };
