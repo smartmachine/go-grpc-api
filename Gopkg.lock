@@ -18,7 +18,7 @@
   revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
 
 [[projects]]
-  digest = "1:e3bed20f553811662a2b5e6c0d40f1c837b2f1decace8afb1bb1778acb97fd04"
+  digest = "1:7c6e2e17c5da6470d00b863a6ded369755e02c4efbb1f62784fbba0708abc261"
   name = "github.com/golang/protobuf"
   packages = [
     "descriptor",
@@ -35,13 +35,14 @@
     "ptypes/duration",
     "ptypes/struct",
     "ptypes/timestamp",
+    "ptypes/wrappers",
   ]
   pruneopts = "UT"
   revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
   version = "v1.3.1"
 
 [[projects]]
-  digest = "1:062a85a570151fa6d9aa10faa03fcc19b9982362bbaeeb6a36b0c54ad15b8b1d"
+  digest = "1:32e31a4913a997af984596b4d849851f54a8652466f4039ea5205494ab47dfe4"
   name = "github.com/grpc-ecosystem/grpc-gateway"
   packages = [
     "codegenerator",
@@ -54,6 +55,7 @@
     "protoc-gen-swagger",
     "protoc-gen-swagger/genswagger",
     "protoc-gen-swagger/options",
+    "runtime",
     "utilities",
   ]
   pruneopts = "UT"
@@ -95,7 +97,7 @@
   name = "golang.org/x/sys"
   packages = ["unix"]
   pruneopts = "UT"
-  revision = "cab07311ab81fc7f180fddf7410b604373b20a00"
+  revision = "61b9204099cb1bebc803c9ffb9b2d3acd9d457d9"
 
 [[projects]]
   digest = "1:8d8faad6b12a3a4c819a3f9618cb6ee1fa1cfc33253abeeea8b55336721e3405"
@@ -124,14 +126,16 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:21a386effcf814b07fda8b1f53b96a5b355f556b495e0aeeafe9c29a390137a8"
+  digest = "1:1233ed1b527b0ff66c3df5879f7e80b1d8631e030cc45821b77fc25acd0d72a6"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api/annotations",
+    "googleapis/api/httpbody",
     "googleapis/rpc/status",
+    "protobuf/field_mask",
   ]
   pruneopts = "UT"
-  revision = "995ef27e003f584103ecdd0f98e1a0cc9cbf3395"
+  revision = "bb713bdc0e5239f2b68e560efbe1c701a6fe78f9"
 
 [[projects]]
   digest = "1:707c3a5d10ed430ea767d73df122d9eb3dfb6312bbacc9f2e39204390686d1d0"
@@ -200,10 +204,13 @@
     "github.com/golang/protobuf/ptypes/timestamp",
     "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway",
     "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger",
+    "github.com/grpc-ecosystem/grpc-gateway/runtime",
+    "github.com/grpc-ecosystem/grpc-gateway/utilities",
     "github.com/proullon/ramsql/driver",
     "github.com/proullon/ramsql/engine/log",
     "google.golang.org/grpc",
     "google.golang.org/grpc/codes",
+    "google.golang.org/grpc/grpclog",
     "google.golang.org/grpc/status",
     "gopkg.in/DATA-DOG/go-sqlmock.v1",
   ]
