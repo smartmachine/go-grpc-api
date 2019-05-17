@@ -54,7 +54,10 @@ func (s *toDoServiceServer) Create(ctx context.Context, req *v1.CreateRequest) (
 		return nil, status.Error(codes.Internal, "unable to convert to orm representation: " + err.Error())
 	}
 
-	s.db.Create(&orm)
+	err = s.db.Create(&orm).Error
+	if err != nil {
+		return nil, status.Errorf(codes.Internal, "unable to insert, internal error: %v", err)
+	}
 
 	return &v1.CreateResponse{
 		Api: apiVersion,
