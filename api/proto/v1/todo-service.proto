@@ -4,6 +4,7 @@ package v1;
 import "google/protobuf/timestamp.proto";
 import "google/api/annotations.proto";
 import "protoc-gen-swagger/options/annotations.proto";
+import "protoc-gen-gorm/options/gorm.proto";
 
 option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
 	info: {
@@ -33,6 +34,7 @@ option (grpc.gateway.protoc_gen_swagger.options.openapiv2_swagger) = {
 
 // Task we have to do
 message ToDo {
+    option (gorm.opts).ormable = true;
     // Unique integer identifier of the todo task
     int64 id = 1;
 
@@ -162,11 +164,11 @@ service ToDoService {
     // Update todo task
     rpc Update(UpdateRequest) returns (UpdateResponse){
         option (google.api.http) = {
-            put: "/v1/todo/{id}"
+            put: "/v1/todo/{toDo.id}"
             body: "*"
 
             additional_bindings {
-                patch: "/v1/todo/{id}"
+                patch: "/v1/todo/{toDo.id}"
                 body: "*"
             }
         };

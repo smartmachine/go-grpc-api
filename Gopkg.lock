@@ -10,6 +10,40 @@
   version = "v1.0.0"
 
 [[projects]]
+  digest = "1:85948b2e061b7bd5706e93cd5cadec11bdaaad6bd28c66f52287c2e7fa59dcb1"
+  name = "github.com/gogo/protobuf"
+  packages = [
+    "gogoproto",
+    "plugin/compare",
+    "plugin/defaultcheck",
+    "plugin/description",
+    "plugin/embedcheck",
+    "plugin/enumstringer",
+    "plugin/equal",
+    "plugin/face",
+    "plugin/gostring",
+    "plugin/marshalto",
+    "plugin/oneofcheck",
+    "plugin/populate",
+    "plugin/size",
+    "plugin/stringer",
+    "plugin/testgen",
+    "plugin/union",
+    "plugin/unmarshal",
+    "proto",
+    "protoc-gen-gogo/descriptor",
+    "protoc-gen-gogo/generator",
+    "protoc-gen-gogo/generator/internal/remap",
+    "protoc-gen-gogo/grpc",
+    "protoc-gen-gogo/plugin",
+    "vanity",
+    "vanity/command",
+  ]
+  pruneopts = "UT"
+  revision = "ba06b47c162d49f2af050fb4c75bcbc86a159d5c"
+  version = "v1.2.1"
+
+[[projects]]
   branch = "master"
   digest = "1:1ba1d79f2810270045c328ae5d674321db34e3aae468eb4233883b473c5c0467"
   name = "github.com/golang/glog"
@@ -61,6 +95,34 @@
   pruneopts = "UT"
   revision = "8fd5fd9d19ce68183a6b0934519dfe7fe6269612"
   version = "v1.9.0"
+
+[[projects]]
+  digest = "1:ffa11522db112e41214aa3b9873e1fc4c3397958e2b1d31fd45abd28392bff8a"
+  name = "github.com/infobloxopen/protoc-gen-gorm"
+  packages = [
+    ".",
+    "options",
+    "plugin",
+  ]
+  pruneopts = "UT"
+  revision = "e5765d16287b92a8826cd63960b393b83cb65f11"
+  version = "v0.16.0"
+
+[[projects]]
+  digest = "1:0a00b2537beacde5f2f5ebec11684f8e98fb23c2ed798a948461d82356dc7491"
+  name = "github.com/jinzhu/gorm"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "b7156195f7f3415f97c20abbd6aff894b847fee8"
+  version = "v1.9.8"
+
+[[projects]]
+  branch = "master"
+  digest = "1:fd97437fbb6b7dce04132cf06775bd258cce305c44add58eb55ca86c6c325160"
+  name = "github.com/jinzhu/inflection"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "04140366298a54a039076d798123ffa108fff46c"
 
 [[projects]]
   branch = "master"
@@ -204,10 +266,13 @@
     "github.com/golang/protobuf/ptypes/timestamp",
     "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway",
     "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger",
+    "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options",
     "github.com/grpc-ecosystem/grpc-gateway/runtime",
     "github.com/grpc-ecosystem/grpc-gateway/utilities",
+    "github.com/infobloxopen/protoc-gen-gorm",
     "github.com/proullon/ramsql/driver",
     "github.com/proullon/ramsql/engine/log",
+    "google.golang.org/genproto/googleapis/api/annotations",
     "google.golang.org/grpc",
     "google.golang.org/grpc/codes",
     "google.golang.org/grpc/grpclog",
