@@ -2,14 +2,14 @@ package cmd
 
 import (
 	"context"
-	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"github.com/proullon/ramsql/engine/log"
+	v12 "go.smartmachine.io/go-grpc-api/pkg/api/v1"
 	"go.smartmachine.io/go-grpc-api/pkg/protocol/rest"
 
-	// mysql driver
-	_ "github.com/proullon/ramsql/driver"
+	_ "github.com/jinzhu/gorm/dialects/sqlite"
 
 	"go.smartmachine.io/go-grpc-api/pkg/protocol/grpc"
 	"go.smartmachine.io/go-grpc-api/pkg/service/v1"
@@ -41,27 +41,20 @@ func RunServer() error {
 		return fmt.Errorf("invalid TCP port for HTTP gateway: '%s'", cfg.HTTPPort)
 	}
 
-	db, err := sql.Open("ramsql", "ToDoSchema")
+	db, err := gorm.Open("sqlite3", "test.db")
 	if err != nil {
 		return fmt.Errorf("failed to open database: %v", err)
 	}
 	defer db.Close()
 
-	// setup schema
-	res, err := db.Exec(`
-CREATE TABLE ToDo (
-  ID BIGSERIAL PRIMARY KEY,
-  Title varchar(200),
-  Description varchar(1024),
-  Reminder timestamp
-);
-`)
+	db.AutoMigrate(&v12.ToDoORM{})
+
 
 	if err != nil {
 		return fmt.Errorf("failed to create schema: %v", err)
 	}
 
-	log.Info("created schema: %v", res)
+	log.Info("created schema: ToDoORM")
 
 
 	v1API := v1.NewToDoServiceServer(db)

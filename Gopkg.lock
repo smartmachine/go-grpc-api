@@ -2,42 +2,11 @@
 
 
 [[projects]]
-  digest = "1:2cd7915ab26ede7d95b8749e6b1f933f1c6d5398030684e6505940a10f31cfda"
-  name = "github.com/ghodss/yaml"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "0ca9ea5df5451ffdf184b4428c902747c2c11cd7"
-  version = "v1.0.0"
-
-[[projects]]
-  digest = "1:85948b2e061b7bd5706e93cd5cadec11bdaaad6bd28c66f52287c2e7fa59dcb1"
+  digest = "1:4597fa93b0165f3ed32adc916709b1ad4c15ba771f70e282c11f0c4bdb9c36bf"
   name = "github.com/gogo/protobuf"
   packages = [
-    "gogoproto",
-    "plugin/compare",
-    "plugin/defaultcheck",
-    "plugin/description",
-    "plugin/embedcheck",
-    "plugin/enumstringer",
-    "plugin/equal",
-    "plugin/face",
-    "plugin/gostring",
-    "plugin/marshalto",
-    "plugin/oneofcheck",
-    "plugin/populate",
-    "plugin/size",
-    "plugin/stringer",
-    "plugin/testgen",
-    "plugin/union",
-    "plugin/unmarshal",
     "proto",
     "protoc-gen-gogo/descriptor",
-    "protoc-gen-gogo/generator",
-    "protoc-gen-gogo/generator/internal/remap",
-    "protoc-gen-gogo/grpc",
-    "protoc-gen-gogo/plugin",
-    "vanity",
-    "vanity/command",
   ]
   pruneopts = "UT"
   revision = "ba06b47c162d49f2af050fb4c75bcbc86a159d5c"
@@ -45,24 +14,14 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1ba1d79f2810270045c328ae5d674321db34e3aae468eb4233883b473c5c0467"
-  name = "github.com/golang/glog"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "23def4e6c14b4da8ac2ed8007337bc5eb5007998"
-
-[[projects]]
-  digest = "1:7c6e2e17c5da6470d00b863a6ded369755e02c4efbb1f62784fbba0708abc261"
+  digest = "1:420701248ee765a9945373092ec9b57a3a21099ce975063dbac100d228ec0bfe"
   name = "github.com/golang/protobuf"
   packages = [
-    "descriptor",
     "jsonpb",
     "proto",
-    "protoc-gen-go",
     "protoc-gen-go/descriptor",
     "protoc-gen-go/generator",
     "protoc-gen-go/generator/internal/remap",
-    "protoc-gen-go/grpc",
     "protoc-gen-go/plugin",
     "ptypes",
     "ptypes/any",
@@ -72,22 +31,13 @@
     "ptypes/wrappers",
   ]
   pruneopts = "UT"
-  revision = "b5d812f8a3706043e23a9cd5babf2e5423744d30"
-  version = "v1.3.1"
+  revision = "b285ee9cfc6c881bb20c0d8dc73370ea9b9ec90f"
 
 [[projects]]
-  digest = "1:32e31a4913a997af984596b4d849851f54a8652466f4039ea5205494ab47dfe4"
+  digest = "1:f6541b78ff9dab03696f8d0df7e0d5660cee336031d24462bbc854f6ecad075c"
   name = "github.com/grpc-ecosystem/grpc-gateway"
   packages = [
-    "codegenerator",
     "internal",
-    "protoc-gen-grpc-gateway",
-    "protoc-gen-grpc-gateway/descriptor",
-    "protoc-gen-grpc-gateway/generator",
-    "protoc-gen-grpc-gateway/gengateway",
-    "protoc-gen-grpc-gateway/httprule",
-    "protoc-gen-swagger",
-    "protoc-gen-swagger/genswagger",
     "protoc-gen-swagger/options",
     "runtime",
     "utilities",
@@ -97,21 +47,39 @@
   version = "v1.9.0"
 
 [[projects]]
-  digest = "1:ffa11522db112e41214aa3b9873e1fc4c3397958e2b1d31fd45abd28392bff8a"
+  digest = "1:1ca67c0b79ca0786334aaa44b207cf0af3a20e3e44b0673f29092f584e9efce8"
+  name = "github.com/infobloxopen/atlas-app-toolkit"
+  packages = [
+    "errors",
+    "gorm",
+    "query",
+    "rpc/errdetails",
+    "rpc/errfields",
+    "rpc/resource",
+  ]
+  pruneopts = "UT"
+  revision = "64387558b6f9e8c116aca9204da97406f866dcfe"
+  version = "v0.17.1"
+
+[[projects]]
+  digest = "1:a323ddc878c1dcb6c66c63cb1683517a8c6bd320f1572262d043f0e39064541f"
   name = "github.com/infobloxopen/protoc-gen-gorm"
   packages = [
-    ".",
+    "errors",
     "options",
-    "plugin",
   ]
   pruneopts = "UT"
   revision = "e5765d16287b92a8826cd63960b393b83cb65f11"
   version = "v0.16.0"
 
 [[projects]]
-  digest = "1:0a00b2537beacde5f2f5ebec11684f8e98fb23c2ed798a948461d82356dc7491"
+  digest = "1:5d725dc044b96b2aef333353bc7dfc13a77166013980af103e2ddce3227c562b"
   name = "github.com/jinzhu/gorm"
-  packages = ["."]
+  packages = [
+    ".",
+    "dialects/postgres",
+    "dialects/sqlite",
+  ]
   pruneopts = "UT"
   revision = "b7156195f7f3415f97c20abbd6aff894b847fee8"
   version = "v1.9.8"
@@ -125,16 +93,31 @@
   revision = "04140366298a54a039076d798123ffa108fff46c"
 
 [[projects]]
-  branch = "master"
-  digest = "1:c228fe5f0ca6f0cb970d8986626c7e4a1c712e1c259bec21635f1506ce61ee15"
-  name = "github.com/proullon/ramsql"
+  digest = "1:0e06e487551e2f9e0d6967a15c42223354e37c2e9869b301b14a42e4b51ea3e0"
+  name = "github.com/lib/pq"
   packages = [
-    "driver",
-    "engine",
-    "engine/log",
-    "engine/parser",
-    "engine/protocol",
+    ".",
+    "hstore",
+    "oid",
+    "scram",
   ]
+  pruneopts = "UT"
+  revision = "bc6a3c0594130b1e34005880bc600b6d3f49fa7f"
+  version = "v1.1.1"
+
+[[projects]]
+  digest = "1:4a49346ca45376a2bba679ca0e83bec949d780d4e927931317904bad482943ec"
+  name = "github.com/mattn/go-sqlite3"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "c7c4067b79cc51e6dfdcef5c702e74b1e0fa7c75"
+  version = "v1.10.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:36d6660ec2afda08ca1ab86e5bd113ef322071cc44193bd4eaab7282c6358b06"
+  name = "github.com/proullon/ramsql"
+  packages = ["engine/log"]
   pruneopts = "UT"
   revision = "817cee58a24456db9e01091be07f562703408ca3"
 
@@ -188,11 +171,12 @@
 
 [[projects]]
   branch = "master"
-  digest = "1:1233ed1b527b0ff66c3df5879f7e80b1d8631e030cc45821b77fc25acd0d72a6"
+  digest = "1:941cec5e70c11edfcc66bcf423228d39dd2bbaba6e3de2caf6e233a262d544d9"
   name = "google.golang.org/genproto"
   packages = [
     "googleapis/api/annotations",
     "googleapis/api/httpbody",
+    "googleapis/rpc/code",
     "googleapis/rpc/status",
     "protobuf/field_mask",
   ]
@@ -248,31 +232,24 @@
   revision = "3f9954f6f6697845b082ca57995849ddf614f450"
   version = "v1.3.3"
 
-[[projects]]
-  digest = "1:4d2e5a73dc1500038e504a8d78b986630e3626dc027bc030ba5c75da257cdb96"
-  name = "gopkg.in/yaml.v2"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "51d6538a90f86fe93ac480b35f37b2be17fef232"
-  version = "v2.2.2"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/golang/protobuf/proto",
-    "github.com/golang/protobuf/protoc-gen-go",
     "github.com/golang/protobuf/ptypes",
     "github.com/golang/protobuf/ptypes/timestamp",
-    "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-grpc-gateway",
-    "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger",
     "github.com/grpc-ecosystem/grpc-gateway/protoc-gen-swagger/options",
     "github.com/grpc-ecosystem/grpc-gateway/runtime",
     "github.com/grpc-ecosystem/grpc-gateway/utilities",
-    "github.com/infobloxopen/protoc-gen-gorm",
-    "github.com/proullon/ramsql/driver",
+    "github.com/infobloxopen/atlas-app-toolkit/gorm",
+    "github.com/infobloxopen/protoc-gen-gorm/errors",
+    "github.com/infobloxopen/protoc-gen-gorm/options",
+    "github.com/jinzhu/gorm",
+    "github.com/jinzhu/gorm/dialects/sqlite",
     "github.com/proullon/ramsql/engine/log",
     "google.golang.org/genproto/googleapis/api/annotations",
+    "google.golang.org/genproto/protobuf/field_mask",
     "google.golang.org/grpc",
     "google.golang.org/grpc/codes",
     "google.golang.org/grpc/grpclog",

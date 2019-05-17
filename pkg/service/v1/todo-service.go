@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"github.com/jinzhu/gorm"
 	"time"
 
 	"github.com/golang/protobuf/ptypes"
@@ -20,7 +21,7 @@ const (
 
 // toDoServiceServer is implementation of v1.ToDoServiceServer proto interface
 type toDoServiceServer struct {
-	db *sql.DB
+	db *gorm.DB
 }
 
 // NewToDoServiceServer creates ToDo service
@@ -40,15 +41,6 @@ func (s *toDoServiceServer) checkAPI(api string) error {
 	return nil
 }
 
-// connect returns SQL database connection from the pool
-func (s *toDoServiceServer) connect(ctx context.Context) (*sql.Conn, error) {
-	c, err := s.db.Conn(ctx)
-	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to connect to database-> "+err.Error())
-	}
-	return c, nil
-}
-
 // Create new todo task
 func (s *toDoServiceServer) Create(ctx context.Context, req *v1.CreateRequest) (*v1.CreateResponse, error) {
 	// check if the API version requested by client is supported by server
@@ -56,34 +48,21 @@ func (s *toDoServiceServer) Create(ctx context.Context, req *v1.CreateRequest) (
 		return nil, err
 	}
 
-	// get SQL connection from pool
-	c, err := s.connect(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer c.Close()
-
-	reminder, err := ptypes.Timestamp(req.ToDo.Reminder)
+	_, err := ptypes.Timestamp(req.ToDo.Reminder)
 	if err != nil {
 		return nil, status.Error(codes.InvalidArgument, "reminder field has invalid format-> "+err.Error())
 	}
 
-	// insert ToDo entity data
-	res, err := c.ExecContext(ctx, "INSERT INTO ToDo('Title', 'Description', 'Reminder') VALUES(?, ?, ?)",
-		req.ToDo.Title, req.ToDo.Description, reminder)
+	orm, err := req.ToDo.ToORM(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to insert into ToDo-> "+err.Error())
+		return nil, status.Error(codes.Internal, "unable to convert to orm representation: " + err.Error())
 	}
 
-	// get ID of creates ToDo
-	id, err := res.LastInsertId()
-	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to retrieve id for created ToDo-> "+err.Error())
-	}
+	s.db.Create(&orm)
 
 	return &v1.CreateResponse{
 		Api: apiVersion,
-		Id:  id,
+		Id:  orm.Id,
 	}, nil
 }
 
@@ -94,43 +73,12 @@ func (s *toDoServiceServer) Read(ctx context.Context, req *v1.ReadRequest) (*v1.
 		return nil, err
 	}
 
-	// get SQL connection from pool
-	c, err := s.connect(ctx)
+	var orm v1.ToDoORM
+	s.db.First(&orm, req.Id)
+
+	td, err := orm.ToPB(ctx)
 	if err != nil {
-		return nil, err
-	}
-	defer c.Close()
-
-	// query ToDo by ID
-	rows, err := c.QueryContext(ctx, "SELECT ID, Title, Description, Reminder FROM ToDo WHERE ID=?",
-		req.Id)
-	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to select from ToDo-> "+err.Error())
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		if err := rows.Err(); err != nil {
-			return nil, status.Error(codes.Unknown, "failed to retrieve data from ToDo-> "+err.Error())
-		}
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("ToDo with ID='%d' is not found",
-			req.Id))
-	}
-
-	// get ToDo data
-	var td v1.ToDo
-	var reminder time.Time
-	if err := rows.Scan(&td.Id, &td.Title, &td.Description, &reminder); err != nil {
-		return nil, status.Error(codes.Unknown, "failed to retrieve field values from ToDo row-> "+err.Error())
-	}
-	td.Reminder, err = ptypes.TimestampProto(reminder)
-	if err != nil {
-		return nil, status.Error(codes.Unknown, "reminder field has invalid format-> "+err.Error())
-	}
-
-	if rows.Next() {
-		return nil, status.Error(codes.Unknown, fmt.Sprintf("found multiple ToDo rows with ID='%d'",
-			req.Id))
+		return nil, status.Error(codes.Internal, "unable to convert to orm representation: " + err.Error())
 	}
 
 	return &v1.ReadResponse{
@@ -147,38 +95,16 @@ func (s *toDoServiceServer) Update(ctx context.Context, req *v1.UpdateRequest) (
 		return nil, err
 	}
 
-	// get SQL connection from pool
-	c, err := s.connect(ctx)
+	orm, err := req.ToDo.ToORM(ctx)
 	if err != nil {
-		return nil, err
-	}
-	defer c.Close()
-
-	reminder, err := ptypes.Timestamp(req.ToDo.Reminder)
-	if err != nil {
-		return nil, status.Error(codes.InvalidArgument, "reminder field has invalid format-> "+err.Error())
+		return nil, status.Error(codes.Internal, "unable to convert to orm representation: " + err.Error())
 	}
 
-	// update ToDo
-	res, err := c.ExecContext(ctx, "UPDATE ToDo SET Title=?, Description=?, Reminder='?' WHERE ID=?",
-		req.ToDo.Title, req.ToDo.Description, reminder, req.ToDo.Id)
-	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to update ToDo-> "+err.Error())
-	}
-
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to retrieve rows affected value-> "+err.Error())
-	}
-
-	if rows == 0 {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("ToDo with ID='%d' is not found",
-			req.ToDo.Id))
-	}
+	s.db.Save(orm)
 
 	return &v1.UpdateResponse{
 		Api:     apiVersion,
-		Updated: rows,
+		Updated: 1,
 	}, nil
 }
 
