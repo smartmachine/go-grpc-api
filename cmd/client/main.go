@@ -92,6 +92,7 @@ func main() {
 	}
 	log.Printf("ReadAll result: <%+v>\n\n", res4)
 
+	/**
 	// Delete
 	req5 := v1.DeleteRequest{
 		Api: apiVersion,
@@ -102,4 +103,6 @@ func main() {
 		log.Fatalf("Delete failed: %v", err)
 	}
 	log.Printf("Delete result: <%+v>\n\n", res5)
+
+	 */
 }

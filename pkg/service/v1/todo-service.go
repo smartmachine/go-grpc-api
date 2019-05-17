@@ -2,12 +2,8 @@ package v1
 
 import (
 	"context"
-	"database/sql"
-	"fmt"
-	"github.com/jinzhu/gorm"
-	"time"
-
 	"github.com/golang/protobuf/ptypes"
+	"github.com/jinzhu/gorm"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -25,7 +21,7 @@ type toDoServiceServer struct {
 }
 
 // NewToDoServiceServer creates ToDo service
-func NewToDoServiceServer(db *sql.DB) v1.ToDoServiceServer {
+func NewToDoServiceServer(db *gorm.DB) v1.ToDoServiceServer {
 	return &toDoServiceServer{db: db}
 }
 
@@ -78,7 +74,7 @@ func (s *toDoServiceServer) Read(ctx context.Context, req *v1.ReadRequest) (*v1.
 
 	td, err := orm.ToPB(ctx)
 	if err != nil {
-		return nil, status.Error(codes.Internal, "unable to convert to orm representation: " + err.Error())
+		return nil, status.Errorf(codes.Internal, "unable to convert to orm representation: %v", err)
 	}
 
 	return &v1.ReadResponse{
@@ -115,32 +111,17 @@ func (s *toDoServiceServer) Delete(ctx context.Context, req *v1.DeleteRequest) (
 		return nil, err
 	}
 
-	// get SQL connection from pool
-	c, err := s.connect(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer c.Close()
+	err := s.db.Delete(&v1.ToDoORM{Id: req.Id}).Error
+	if gorm.IsRecordNotFoundError(err) {
+		return nil, status.Errorf(codes.NotFound, "unable to delete, record not found: %v", err)
 
-	// delete ToDo
-	res, err := c.ExecContext(ctx, "DELETE FROM ToDo WHERE ID=?", req.Id)
-	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to delete ToDo-> "+err.Error())
-	}
-
-	rows, err := res.RowsAffected()
-	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to retrieve rows affected value-> "+err.Error())
-	}
-
-	if rows == 0 {
-		return nil, status.Error(codes.NotFound, fmt.Sprintf("ToDo with ID='%d' is not found",
-			req.Id))
+	} else if err != nil {
+		return nil, status.Errorf(codes.Internal, "unable to delete, internal error: %v", err)
 	}
 
 	return &v1.DeleteResponse{
 		Api:     apiVersion,
-		Deleted: rows,
+		Deleted: 1,
 	}, nil
 }
 
@@ -151,36 +132,26 @@ func (s *toDoServiceServer) ReadAll(ctx context.Context, req *v1.ReadAllRequest)
 		return nil, err
 	}
 
-	// get SQL connection from pool
-	c, err := s.connect(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer c.Close()
+	var users []*v1.ToDoORM
+	var count int
 
-	// get ToDo list
-	rows, err := c.QueryContext(ctx, "SELECT ID, Title, Description, Reminder FROM ToDo")
-	if err != nil {
-		return nil, status.Error(codes.Unknown, "failed to select from ToDo-> "+err.Error())
-	}
-	defer rows.Close()
+	err := s.db.Find(&users).Count(&count).Error
+	if gorm.IsRecordNotFoundError(err) {
+		return nil, status.Errorf(codes.NotFound, "unable to read records, not found: %v", err)
 
-	var reminder time.Time
+	} else if err != nil {
+		return nil, status.Errorf(codes.Internal, "unable to read records, internal error: %v", err)
+	}
+
 	list := []*v1.ToDo{}
-	for rows.Next() {
-		td := new(v1.ToDo)
-		if err := rows.Scan(&td.Id, &td.Title, &td.Description, &reminder); err != nil {
-			return nil, status.Error(codes.Unknown, "failed to retrieve field values from ToDo row-> "+err.Error())
-		}
-		td.Reminder, err = ptypes.TimestampProto(reminder)
-		if err != nil {
-			return nil, status.Error(codes.Unknown, "reminder field has invalid format-> "+err.Error())
-		}
-		list = append(list, td)
-	}
+	for _, todo := range users {
 
-	if err := rows.Err(); err != nil {
-		return nil, status.Error(codes.Unknown, "failed to retrieve data from ToDo-> "+err.Error())
+		orm, err := todo.ToPB(ctx)
+		if err != nil {
+			return nil, status.Error(codes.Internal, "unable to convert to orm representation: " + err.Error())
+		}
+
+		list = append(list, &orm)
 	}
 
 	return &v1.ReadAllResponse{
