@@ -3,12 +3,18 @@ BUILD := $(shell git rev-parse --short HEAD)
 GOFILES := $(wildcard *.go)
 LDFLAGS=-ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD)"
 
-.PHONY: all api clean-api test help deps veryclean
+.PHONY: all check ensure api test dep build clean clean-api veryclean help
 
-all: deps api test
+all: check ensure api test build
 
-deps: ## Install all supporting dependencies like generators and dep.
+check: ## Install all supporting dependencies like generators and dep.
 	@bin/install_deps.sh
+
+Gopkg.lock: Gopkg.toml $(GOFILES)
+	@dep ensure -update
+
+ensure: Gopkg.lock ## Ensure vendor directory is up to date
+	@dep ensure -update
 
 pkg/api/v1/todo-service.pb.go: api/proto/v1/todo-service.proto
 	$(info ... Generating Protobuffer Go files)
@@ -32,8 +38,19 @@ test: ## Run unit tests
 	$(info Running unit tests ...)
 	@go test ./pkg/service/v1
 
+dep: ## Make sure all dependencies are up to date
+	@dep ensure
+
 server: $(GOFILES)
-	@go build $(LDFLAGS) -o server ./cmd/server
+	@go build -v $(LDFLAGS) -o server ./cmd/server
+
+client: $(GOFILES)
+	@go build -v $(LDFLAGS) -o client ./cmd/client
+
+client-rest: $(GOFILES)
+	@go build -v $(LDFLAGS) -o client-rest ./cmd/client-rest
+
+build: dep server client client-rest ## Build all binary artifacts
 
 clean: ## Clean all build artifacts
 	@rm -rf server client client-rest
