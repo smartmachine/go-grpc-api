@@ -41,7 +41,7 @@ func RunServer() error {
 		return fmt.Errorf("invalid TCP port for HTTP gateway: '%s'", cfg.HTTPPort)
 	}
 
-	db, err := gorm.Open("sqlite3", "test.db")
+	db, err := gorm.Open("sqlite3", ":memory:")
 	if err != nil {
 		return fmt.Errorf("failed to open database: %v", err)
 	}
@@ -49,13 +49,11 @@ func RunServer() error {
 
 	db.AutoMigrate(&v12.ToDoORM{})
 
-
 	if err != nil {
 		return fmt.Errorf("failed to create schema: %v", err)
 	}
 
 	log.Info("created schema: ToDoORM")
-
 
 	v1API := v1.NewToDoServiceServer(db)
 
@@ -63,7 +61,6 @@ func RunServer() error {
 	go func() {
 		_ = rest.RunServer(ctx, cfg.GRPCPort, cfg.HTTPPort)
 	}()
-
 
 	return grpc.RunServer(ctx, v1API, cfg.GRPCPort)
 }
