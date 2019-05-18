@@ -44,7 +44,7 @@ var _ = math.Inf
 type ToDoORM struct {
 	Description string
 	Id          int64
-	Reminder    *time.Time
+	Reminder    time.Time
 	Title       string
 }
 
@@ -71,7 +71,7 @@ func (m *ToDo) ToORM(ctx context.Context) (ToDoORM, error) {
 		if t, err = ptypes1.Timestamp(m.Reminder); err != nil {
 			return to, err
 		}
-		to.Reminder = &t
+		to.Reminder = t
 	}
 	if posthook, ok := interface{}(m).(ToDoWithAfterToORM); ok {
 		err = posthook.AfterToORM(ctx, &to)
@@ -92,10 +92,8 @@ func (m *ToDoORM) ToPB(ctx context.Context) (ToDo, error) {
 	to.Id = m.Id
 	to.Title = m.Title
 	to.Description = m.Description
-	if m.Reminder != nil {
-		if to.Reminder, err = ptypes1.TimestampProto(*m.Reminder); err != nil {
-			return to, err
-		}
+	if to.Reminder, err = ptypes1.TimestampProto(m.Reminder); err != nil {
+		return to, err
 	}
 	if posthook, ok := interface{}(m).(ToDoWithAfterToPB); ok {
 		err = posthook.AfterToPB(ctx, &to)
