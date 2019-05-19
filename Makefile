@@ -1,6 +1,6 @@
 VERSION := $(shell git describe --tags --dirty)
 BUILD := $(shell git rev-parse --short HEAD)
-GOFILES := $(wildcard *.go)
+GOFILES := $(shell find . -type f -name '*.go')
 LDFLAGS=-ldflags "-X=main.Version=$(VERSION) -X=main.Build=$(BUILD)"
 
 .PHONY: all check ensure api test dep build clean clean-api veryclean help
@@ -11,7 +11,7 @@ check: ## Install all supporting dependencies like generators and dep.
 	$(info Checking system for required build/compile-time dependencies)
 	@bin/install_deps.sh
 
-Gopkg.lock: Gopkg.toml $(GOFILES)
+Gopkg.lock: Gopkg.toml
 	$(info Rebuilding Gopkg.lock)
 	@dep ensure -update
 
@@ -40,7 +40,6 @@ test: ## Run unit tests
 	@go test ./pkg/service/v1
 
 dep: ## Make sure all dependencies are up to date
-	$(info Checking vendor directory)
 	@dep ensure
 
 server: $(GOFILES)

@@ -2,23 +2,20 @@ package v1
 
 import (
 	"context"
-	"database/sql/driver"
 	"errors"
+	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/golang/protobuf/ptypes"
+	"github.com/golang/protobuf/ptypes/timestamp"
 	"github.com/jinzhu/gorm"
+	"go.smartmachine.io/go-grpc-api/pkg/api/v1"
 	"reflect"
 	"testing"
 	"time"
-
-	"github.com/golang/protobuf/ptypes"
-	"github.com/golang/protobuf/ptypes/timestamp"
-	"gopkg.in/DATA-DOG/go-sqlmock.v1"
-
-	"go.smartmachine.io/go-grpc-api/pkg/api/v1"
 )
 
 func Test_toDoServiceServer_Create(t *testing.T) {
 	ctx := context.Background()
-	mockDB, mock, err := sqlmock.New()
+	mockDB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
@@ -28,7 +25,8 @@ func Test_toDoServiceServer_Create(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open database: %v", err)
 	}
-	mock.ExpectExec("CREATE TABLE \"to_dos\"").WillReturnResult(driver.ResultNoRows)
+	mock.ExpectExec("CREATE TABLE \"to_dos\" (\"description\" varchar(255),\"id\" integer primary key autoincrement,\"reminder\" datetime,\"title\" varchar(255) )").
+		WillReturnResult(sqlmock.NewResult(0,0))
 	err = db.AutoMigrate(&v1.ToDoORM{}).Error
 	if err != nil {
 		t.Fatalf("failed to create schema: %v", err)
@@ -64,7 +62,8 @@ func Test_toDoServiceServer_Create(t *testing.T) {
 				},
 			},
 			mock: func() {
-				mock.ExpectExec("INSERT INTO \"to_dos\"").WithArgs("description", tm, "title").
+				mock.ExpectExec("INSERT INTO \"to_dos\" (\"description\",\"reminder\",\"title\") VALUES (?,?,?)").
+					WithArgs("description", tm, "title").
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 			want: &v1.CreateResponse{
@@ -127,7 +126,8 @@ func Test_toDoServiceServer_Create(t *testing.T) {
 				},
 			},
 			mock: func() {
-				mock.ExpectExec("INSERT INTO \"to_dos\"").WithArgs("description", tm, "title").
+				mock.ExpectExec("INSERT INTO \"to_dos\" (\"description\",\"reminder\",\"title\") VALUES (?,?,?)").
+					WithArgs("description", tm, "title").
 					WillReturnError(errors.New("INSERT failed"))
 			},
 			wantErr: true,
@@ -147,7 +147,8 @@ func Test_toDoServiceServer_Create(t *testing.T) {
 				},
 			},
 			mock: func() {
-				mock.ExpectExec("INSERT INTO \"to_dos\"").WithArgs("description", tm, "title").
+				mock.ExpectExec("INSERT INTO \"to_dos\" (\"description\",\"reminder\",\"title\") VALUES (?,?,?)").
+					WithArgs("description", tm, "title").
 					WillReturnResult(sqlmock.NewErrorResult(errors.New("LastInsertId failed")))
 			},
 			wantErr: true,
@@ -168,15 +169,26 @@ func Test_toDoServiceServer_Create(t *testing.T) {
 	}
 }
 
-/**
+
 
 func Test_toDoServiceServer_Read(t *testing.T) {
 	ctx := context.Background()
-	db, mock, err := sqlmock.New()
+	mockDB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+
+	defer mockDB.Close()
+	db, err := gorm.Open("sqlite3", mockDB)
+	if err != nil {
+		t.Fatalf("failed to open database: %v", err)
+	}
+	mock.ExpectExec("CREATE TABLE \"to_dos\" (\"description\" varchar(255),\"id\" integer primary key autoincrement,\"reminder\" datetime,\"title\" varchar(255) )").
+		WillReturnResult(sqlmock.NewResult(0,0))
+	err = db.AutoMigrate(&v1.ToDoORM{}).Error
+	if err != nil {
+		t.Fatalf("failed to create schema: %v", err)
+	}
 	s := NewToDoServiceServer(db)
 	tm := time.Now().In(time.UTC)
 	reminder, _ := ptypes.TimestampProto(tm)
@@ -204,9 +216,9 @@ func Test_toDoServiceServer_Read(t *testing.T) {
 				},
 			},
 			mock: func() {
-				rows := sqlmock.NewRows([]string{"ID", "Title", "Description", "Reminder"}).
+				rows := sqlmock.NewRows([]string{"id", "title", "description", "reminder"}).
 					AddRow(1, "title", "description", tm)
-				mock.ExpectQuery("SELECT (.+) FROM ToDo").WithArgs(1).WillReturnRows(rows)
+				mock.ExpectQuery("SELECT * FROM \"to_dos\" WHERE (\"to_dos\".\"id\" = 1) ORDER BY \"to_dos\".\"id\" ASC LIMIT 1").WillReturnRows(rows)
 			},
 			want: &v1.ReadResponse{
 				Api: "v1",
@@ -224,7 +236,7 @@ func Test_toDoServiceServer_Read(t *testing.T) {
 			args: args{
 				ctx: ctx,
 				req: &v1.ReadRequest{
-					Api: "v1",
+					Api: "v1000",
 					Id:  1,
 				},
 			},
@@ -242,7 +254,7 @@ func Test_toDoServiceServer_Read(t *testing.T) {
 				},
 			},
 			mock: func() {
-				mock.ExpectQuery("SELECT (.+) FROM ToDo").WithArgs(1).
+				mock.ExpectQuery("SELECT * FROM \"to_dos\" WHERE (\"to_dos\".\"id\" = 1) ORDER BY \"to_dos\".\"id\" ASC LIMIT 1").
 					WillReturnError(errors.New("SELECT failed"))
 			},
 			wantErr: true,
@@ -258,8 +270,9 @@ func Test_toDoServiceServer_Read(t *testing.T) {
 				},
 			},
 			mock: func() {
-				rows := sqlmock.NewRows([]string{"ID", "Title", "Description", "Reminder"})
-				mock.ExpectQuery("SELECT (.+) FROM ToDo").WithArgs(1).WillReturnRows(rows)
+				rows := sqlmock.NewRows([]string{"id", "title", "description", "reminder"})
+				mock.ExpectQuery("SELECT * FROM \"to_dos\" WHERE (\"to_dos\".\"id\" = 1) ORDER BY \"to_dos\".\"id\" ASC LIMIT 1").
+					WillReturnRows(rows)
 			},
 			wantErr: true,
 		},
@@ -282,11 +295,22 @@ func Test_toDoServiceServer_Read(t *testing.T) {
 
 func Test_toDoServiceServer_Update(t *testing.T) {
 	ctx := context.Background()
-	db, mock, err := sqlmock.New()
+	mockDB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+
+	defer mockDB.Close()
+	db, err := gorm.Open("sqlite3", mockDB)
+	if err != nil {
+		t.Fatalf("failed to open database: %v", err)
+	}
+	mock.ExpectExec("CREATE TABLE \"to_dos\" (\"description\" varchar(255),\"id\" integer primary key autoincrement,\"reminder\" datetime,\"title\" varchar(255) )").
+		WillReturnResult(sqlmock.NewResult(0,0))
+	err = db.AutoMigrate(&v1.ToDoORM{}).Error
+	if err != nil {
+		t.Fatalf("failed to create schema: %v", err)
+	}
 	s := NewToDoServiceServer(db)
 	tm := time.Now().In(time.UTC)
 	reminder, _ := ptypes.TimestampProto(tm)
@@ -319,7 +343,8 @@ func Test_toDoServiceServer_Update(t *testing.T) {
 				},
 			},
 			mock: func() {
-				mock.ExpectExec("UPDATE ToDo").WithArgs("new title", "new description", tm, 1).
+				mock.ExpectExec("UPDATE \"to_dos\" SET \"description\" = ?, \"reminder\" = ?, \"title\" = ? WHERE \"to_dos\".\"id\" = ?").
+					WithArgs("new description", tm, "new title", 1).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 			want: &v1.UpdateResponse{
@@ -382,7 +407,7 @@ func Test_toDoServiceServer_Update(t *testing.T) {
 				},
 			},
 			mock: func() {
-				mock.ExpectExec("UPDATE ToDo").WithArgs("new title", "new description", tm, 1).
+				mock.ExpectExec("UPDATE \"to_dos\" SET \"description\" = ?, \"reminder\" = ?, \"title\" = ? WHERE \"to_dos\".\"id\" = ?").WithArgs("new description", tm, "new title", 1).
 					WillReturnError(errors.New("UPDATE failed"))
 			},
 			wantErr: true,
@@ -403,7 +428,7 @@ func Test_toDoServiceServer_Update(t *testing.T) {
 				},
 			},
 			mock: func() {
-				mock.ExpectExec("UPDATE ToDo").WithArgs("new title", "new description", tm, 1).
+				mock.ExpectExec("UPDATE \"to_dos\" SET \"description\" = ?, \"reminder\" = ?, \"title\" = ? WHERE \"to_dos\".\"id\" = ?").WithArgs("new description", tm, "new title", 1).
 					WillReturnResult(sqlmock.NewErrorResult(errors.New("RowsAffected failed")))
 			},
 			wantErr: true,
@@ -424,7 +449,7 @@ func Test_toDoServiceServer_Update(t *testing.T) {
 				},
 			},
 			mock: func() {
-				mock.ExpectExec("UPDATE ToDo").WithArgs("new title", "new description", tm, 1).
+				mock.ExpectExec("UPDATE \"to_dos\" SET \"description\" = ?, \"reminder\" = ?, \"title\" = ? WHERE \"to_dos\".\"id\" = ?").WithArgs("new description", tm, "new title", 1).
 					WillReturnResult(sqlmock.NewResult(1, 0))
 			},
 			wantErr: true,
@@ -447,11 +472,22 @@ func Test_toDoServiceServer_Update(t *testing.T) {
 
 func Test_toDoServiceServer_Delete(t *testing.T) {
 	ctx := context.Background()
-	db, mock, err := sqlmock.New()
+	mockDB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+
+	defer mockDB.Close()
+	db, err := gorm.Open("sqlite3", mockDB)
+	if err != nil {
+		t.Fatalf("failed to open database: %v", err)
+	}
+	mock.ExpectExec("CREATE TABLE \"to_dos\" (\"description\" varchar(255),\"id\" integer primary key autoincrement,\"reminder\" datetime,\"title\" varchar(255) )").
+		WillReturnResult(sqlmock.NewResult(0,0))
+	err = db.AutoMigrate(&v1.ToDoORM{}).Error
+	if err != nil {
+		t.Fatalf("failed to create schema: %v", err)
+	}
 	s := NewToDoServiceServer(db)
 
 	type args struct {
@@ -477,7 +513,7 @@ func Test_toDoServiceServer_Delete(t *testing.T) {
 				},
 			},
 			mock: func() {
-				mock.ExpectExec("DELETE FROM ToDo").WithArgs(1).
+				mock.ExpectExec("DELETE FROM \"to_dos\" WHERE \"to_dos\".\"id\" = ?").WithArgs(1).
 					WillReturnResult(sqlmock.NewResult(1, 1))
 			},
 			want: &v1.DeleteResponse{
@@ -509,7 +545,7 @@ func Test_toDoServiceServer_Delete(t *testing.T) {
 				},
 			},
 			mock: func() {
-				mock.ExpectExec("DELETE FROM ToDo").WithArgs(1).
+				mock.ExpectExec("DELETE FROM \"to_dos\" WHERE \"to_dos\".\"id\" = ?").WithArgs(1).
 					WillReturnError(errors.New("DELETE failed"))
 			},
 			wantErr: true,
@@ -525,7 +561,7 @@ func Test_toDoServiceServer_Delete(t *testing.T) {
 				},
 			},
 			mock: func() {
-				mock.ExpectExec("DELETE FROM ToDo").WithArgs(1).
+				mock.ExpectExec("DELETE FROM \"to_dos\" WHERE \"to_dos\".\"id\" = ?").WithArgs(1).
 					WillReturnResult(sqlmock.NewErrorResult(errors.New("RowsAffected failed")))
 			},
 			wantErr: true,
@@ -541,10 +577,13 @@ func Test_toDoServiceServer_Delete(t *testing.T) {
 				},
 			},
 			mock: func() {
-				mock.ExpectExec("DELETE FROM ToDo").WithArgs(1).
+				mock.ExpectExec("DELETE FROM \"to_dos\" WHERE \"to_dos\".\"id\" = ?").WithArgs(1).
 					WillReturnResult(sqlmock.NewResult(1, 0))
 			},
-			wantErr: true,
+			want: &v1.DeleteResponse{
+				Api:     "v1",
+				Deleted: 0,
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -564,11 +603,22 @@ func Test_toDoServiceServer_Delete(t *testing.T) {
 
 func Test_toDoServiceServer_ReadAll(t *testing.T) {
 	ctx := context.Background()
-	db, mock, err := sqlmock.New()
+	mockDB, mock, err := sqlmock.New(sqlmock.QueryMatcherOption(sqlmock.QueryMatcherEqual))
 	if err != nil {
 		t.Fatalf("an error '%s' was not expected when opening a stub database connection", err)
 	}
-	defer db.Close()
+
+	defer mockDB.Close()
+	db, err := gorm.Open("sqlite3", mockDB)
+	if err != nil {
+		t.Fatalf("failed to open database: %v", err)
+	}
+	mock.ExpectExec("CREATE TABLE \"to_dos\" (\"description\" varchar(255),\"id\" integer primary key autoincrement,\"reminder\" datetime,\"title\" varchar(255) )").
+		WillReturnResult(sqlmock.NewResult(0,0))
+	err = db.AutoMigrate(&v1.ToDoORM{}).Error
+	if err != nil {
+		t.Fatalf("failed to create schema: %v", err)
+	}
 	s := NewToDoServiceServer(db)
 	tm1 := time.Now().In(time.UTC)
 	reminder1, _ := ptypes.TimestampProto(tm1)
@@ -597,10 +647,13 @@ func Test_toDoServiceServer_ReadAll(t *testing.T) {
 				},
 			},
 			mock: func() {
-				rows := sqlmock.NewRows([]string{"ID", "Title", "Description", "Reminder"}).
+				rows := sqlmock.NewRows([]string{"id", "title", "description", "reminder"}).
 					AddRow(1, "title 1", "description 1", tm1).
 					AddRow(2, "title 2", "description 2", tm2)
-				mock.ExpectQuery("SELECT (.+) FROM ToDo").WillReturnRows(rows)
+
+				mock.ExpectQuery("SELECT * FROM \"to_dos\"").WillReturnRows(rows)
+				mock.ExpectQuery("SELECT count(*) FROM \"to_dos\"").
+					WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
 			},
 			want: &v1.ReadAllResponse{
 				Api: "v1",
@@ -630,8 +683,10 @@ func Test_toDoServiceServer_ReadAll(t *testing.T) {
 				},
 			},
 			mock: func() {
-				rows := sqlmock.NewRows([]string{"ID", "Title", "Description", "Reminder"})
-				mock.ExpectQuery("SELECT (.+) FROM ToDo").WillReturnRows(rows)
+				rows := sqlmock.NewRows([]string{"id", "title", "description", "reminder"})
+				mock.ExpectQuery("SELECT * FROM \"to_dos\"").WillReturnRows(rows)
+				mock.ExpectQuery("SELECT count(*) FROM \"to_dos\"").
+					WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
 			},
 			want: &v1.ReadAllResponse{
 				Api:   "v1",
@@ -665,6 +720,3 @@ func Test_toDoServiceServer_ReadAll(t *testing.T) {
 		})
 	}
 }
-
-
- */

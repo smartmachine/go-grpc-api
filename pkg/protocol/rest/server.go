@@ -2,7 +2,9 @@ package rest
 
 import (
 	"context"
-	"log"
+	"go.smartmachine.io/go-grpc-api/pkg/logger"
+	"go.smartmachine.io/go-grpc-api/pkg/protocol/rest/middleware"
+	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"os/signal"
@@ -22,12 +24,12 @@ func RunServer(ctx context.Context, grpcPort, httpPort string) error {
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{grpc.WithInsecure()}
 	if err := v1.RegisterToDoServiceHandlerFromEndpoint(ctx, mux, "localhost:"+grpcPort, opts); err != nil {
-		log.Fatalf("failed to start HTTP gateway: %v", err)
+		logger.Log.Fatal("failed to start HTTP gateway", zap.String("reason", err.Error()))
 	}
 
 	srv := &http.Server{
 		Addr:    ":" + httpPort,
-		Handler: mux,
+		Handler: middleware.AddRequestID(middleware.AddLogger(logger.Log, mux)),
 	}
 
 	// graceful shutdown
@@ -38,12 +40,14 @@ func RunServer(ctx context.Context, grpcPort, httpPort string) error {
 			// sig is a ^C, handle it
 		}
 
+		logger.Log.Warn("shutting down REST server...")
+
 		_, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 
 		_ = srv.Shutdown(ctx)
 	}()
 
-	log.Println("starting HTTP/REST gateway...")
+	logger.Log.Info("starting HTTP/REST gateway...")
 	return srv.ListenAndServe()
 }

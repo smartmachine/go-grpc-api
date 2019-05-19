@@ -73,7 +73,13 @@ func (s *toDoServiceServer) Read(ctx context.Context, req *v1.ReadRequest) (*v1.
 	}
 
 	var orm v1.ToDoORM
-	s.db.First(&orm, req.Id)
+	err := s.db.First(&orm, req.Id).Error
+	if err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			return nil, status.Errorf(codes.NotFound, "record not found: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "error reading record: %v", err)
+	}
 
 	td, err := orm.ToPB(ctx)
 	if err != nil {
@@ -99,7 +105,13 @@ func (s *toDoServiceServer) Update(ctx context.Context, req *v1.UpdateRequest) (
 		return nil, status.Error(codes.Internal, "unable to convert to orm representation: " + err.Error())
 	}
 
-	s.db.Save(orm)
+	err = s.db.Save(orm).Error
+	if err != nil {
+		if gorm.IsRecordNotFoundError(err) {
+			return nil, status.Errorf(codes.NotFound, "record not found: %v", err)
+		}
+		return nil, status.Errorf(codes.Internal, "error updating record: %v", err)
+	}
 
 	return &v1.UpdateResponse{
 		Api:     apiVersion,
@@ -114,17 +126,18 @@ func (s *toDoServiceServer) Delete(ctx context.Context, req *v1.DeleteRequest) (
 		return nil, err
 	}
 
-	err := s.db.Delete(&v1.ToDoORM{Id: req.Id}).Error
-	if gorm.IsRecordNotFoundError(err) {
-		return nil, status.Errorf(codes.NotFound, "unable to delete, record not found: %v", err)
-
-	} else if err != nil {
+	db := s.db.Delete(&v1.ToDoORM{Id: req.Id})
+	err := db.Error
+	if err != nil{
+		if gorm.IsRecordNotFoundError(err){
+			return nil, status.Errorf(codes.NotFound, "unable to delete, record not found: %v", err)
+		}
 		return nil, status.Errorf(codes.Internal, "unable to delete, internal error: %v", err)
 	}
 
 	return &v1.DeleteResponse{
 		Api:     apiVersion,
-		Deleted: 1,
+		Deleted: db.RowsAffected,
 	}, nil
 }
 
