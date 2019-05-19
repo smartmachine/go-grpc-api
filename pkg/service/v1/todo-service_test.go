@@ -2,6 +2,7 @@ package v1
 
 import (
 	"context"
+	"database/sql/driver"
 	"errors"
 	"github.com/jinzhu/gorm"
 	"reflect"
@@ -27,7 +28,11 @@ func Test_toDoServiceServer_Create(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to open database: %v", err)
 	}
-	db.AutoMigrate(&v1.ToDoORM{})
+	mock.ExpectExec("CREATE TABLE \"to_dos\"").WillReturnResult(driver.ResultNoRows)
+	err = db.AutoMigrate(&v1.ToDoORM{}).Error
+	if err != nil {
+		t.Fatalf("failed to create schema: %v", err)
+	}
 	s := NewToDoServiceServer(db)
 	tm := time.Now().In(time.UTC)
 	reminder, _ := ptypes.TimestampProto(tm)
